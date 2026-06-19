@@ -1,0 +1,7 @@
+Item,Description,Qty,Unit Price (INR, shipping+tax included),Unit Price (USD approx),Seller,Product Link,Notes
+LiPo Battery 3.7V 2000mAh (KP-603048),"2-pin connector, lithium polymer, KP Original",1,397.00,4.21,Amazon.in,https://www.amazon.in/KP-Original-Battery-Rechargeable-KP-603048/dp/B0GM6RKSB4,Free Prime delivery (shipping already included). Bought together with row below in same cart.
+JST-PH 2.0mm 2-Pin Connector Set (Villcron),Female pre-wired socket + loose male plug for Li-ion battery wiring,1,79.00,0.84,Amazon.in,https://www.amazon.in/VillcronTM-Connector-Silicone-Battery-Electronics/dp/B0GPQMHPRS,Free Prime delivery (shipping already included). Same cart as row above - combined subtotal was 476.00.
+Waveshare 1.5inch RGB OLED Display Module (SKU 14747),"65K RGB colors, 128x128, SPI, SSD1351 driver",1,1550.00,16.43,Hubtronics.in,https://hubtronics.in/1.5inch-rgb-oled-module,Price with 18% IGST + shipping applied (pre-tax unit price 1250.00 + 75.00 shipping = 1550.00 to pay). High-confidence match: exact title + exact pre-tax price match your screenshot.
+Seeed Studio XIAO ESP32C6,MCU board with onboard WiFi 6 / BLE,1,844.99,8.96,ThinkRobotics.com,https://thinkrobotics.com/products/xiao-esp32c6,"Subtotal 749.99 + shipping 95.00 = 844.99, incl 114.41 tax, matches your screenshot's numbers and checkout UI (Shopify)."
+,,,,,,,
+TOTAL,,,2870.99,30.43,,,"Sum of shipping-included unit prices above. USD at ~94.33 INR/USD (today's mid-market rate, fees not included)."
