@@ -57,6 +57,16 @@ LIP_INTERFERENCE = 0.12 # per-side INTERFERENCE at the lip TOP (press at full se
 SCREEN_PCB_OFFSET = 2.2
 BOSS_CY = -SCREEN_PCB_OFFSET   # screw-pattern center, Y (shifted so screen centers)
 
+ENGRAVING = "aniruddh"   # owner name debossed into the lid back -- change freely
+
+# Side grip texture ("tuff"): shallow horizontal grooves wrapping the body side
+# walls. Recessed only -- they don't touch the 60x60 envelope or the lid fit.
+GROOVE_DEPTH = 0.6   # how far into the 3.1mm side wall (leaves 2.5mm)
+GROOVE_H     = 1.2   # height of each groove
+GROOVE_PITCH = 2.6   # groove + gap spacing
+GROOVE_Z0    = 5.0   # first groove (clear of the bottom show-face round)
+GROOVE_Z1    = 22.0  # last groove (clear of the top rim / lid seam)
+
 
 def _body():
     with BuildPart() as body_part:
@@ -109,10 +119,22 @@ def _body():
         with Locations((16.0, 0.0, 12.0)):
             Box(22.0, 20.0, 1.0, align=(Align.CENTER, Align.CENTER, Align.MIN))
 
-        # 0.5mm relief pocket in the shelf bed to clear bottom solder pads,
-        # extending out toward the wall so it merges with the USB-C slot.
-        with Locations((18.75, 0.0, 12.5)):
-            Box(22.5, 14.0, 0.5, align=(Align.CENTER, Align.CENTER, Align.MIN))
+        # 0.5mm relief pocket in the shelf bed to clear bottom solder pads on the
+        # USB-end half of the board. (Was ADD -- a bump that lifted the board off
+        # flat; now SUBTRACT so it's a real relief as the comment intended.)
+        with Locations((18.75, 0.0, 13.0)):
+            Box(22.5, 14.0, 0.5, mode=Mode.SUBTRACT,
+                align=(Align.CENTER, Align.CENTER, Align.MAX))
+
+        # BATTERY PAD ACCESS: the XIAO's BAT+/BAT- pads are on the UNDERSIDE near
+        # the D5/D8 silkscreen, i.e. the non-USB (-X) end -- which faces down into
+        # this shelf. Cut a through-window in the shelf there so you can solder the
+        # LiPo to the pads and drop the wires into the cavity. A 1.5mm support rail
+        # is left at the -X edge (under the retention lip) and the whole +X half of
+        # the shelf stays, so the board still rests flat top-to-bottom.
+        with Locations((11.25, 0.0, 13.0)):
+            Box(9.5, 20.0, 1.5, mode=Mode.SUBTRACT,
+                align=(Align.CENTER, Align.CENTER, Align.MAX))
 
         # Small retention lip that catches the XIAO board's edge above the shelf.
         with Locations((6.0, 0.0, 13.0)):
@@ -131,6 +153,34 @@ def _body():
             extrude(amount=OUTER / 2 - CAVITY / 2 + 0.5)
         add(usb_cutout.part, mode=Mode.SUBTRACT)
 
+        # POLISH: break the sharp edges on the show face (front, Z=0). Outer
+        # perimeter gets a soft R1.5 pebble round; the screen window gets a
+        # small R0.6 bezel chamfer so the opening doesn't read as a knife edge.
+        # Edges are split by radial distance from center (outer >24mm, window
+        # <24mm) so one face selection serves both at different radii.
+        front = body_part.faces().sort_by(Axis.Z)[0]
+        outer = [e for e in front.edges() if e.center().X ** 2 + e.center().Y ** 2 > 576]
+        window = [e for e in front.edges() if e.center().X ** 2 + e.center().Y ** 2 <= 576]
+        fillet(outer, radius=2.5)   # smoother pebble (front wall is 4mm, plenty)
+        fillet(window, radius=0.6)
+
+        # GRIP TEXTURE: subtract a stack of thin frame rings so each leaves a
+        # shallow groove wrapping the whole perimeter (flats + rounded corners).
+        # Each ring spans only the outer GROOVE_DEPTH of the wall.
+        z = GROOVE_Z0
+        while z <= GROOVE_Z1 + 1e-6:
+            with BuildPart() as groove:
+                with BuildSketch(Plane.XY.offset(z)):
+                    Rectangle(OUTER, OUTER)
+                    fillet(vertices(), radius=OUTER_FILLET)
+                extrude(amount=GROOVE_H)
+                with BuildSketch(Plane.XY.offset(z)):
+                    Rectangle(OUTER - 2 * GROOVE_DEPTH, OUTER - 2 * GROOVE_DEPTH)
+                    fillet(vertices(), radius=OUTER_FILLET - GROOVE_DEPTH)
+                extrude(amount=GROOVE_H, mode=Mode.SUBTRACT)
+            add(groove.part, mode=Mode.SUBTRACT)
+            z += GROOVE_PITCH
+
     return body_part.part
 
 
@@ -145,7 +195,7 @@ def _lid():
         with BuildSketch():
             Rectangle(OUTER, OUTER)
             fillet(vertices(), radius=OUTER_FILLET)
-        extrude(amount=2.0)
+        extrude(amount=2.5)   # plate 2.0 -> 2.5 so a bigger smooth round fits the edge
 
         with BuildSketch(Plane.XY):                  # lip top (at plate underside)
             Rectangle(lip_top, lip_top)
@@ -154,6 +204,17 @@ def _lid():
             Rectangle(lip_bot, lip_bot)
             fillet(vertices(), radius=fil_bot)
         loft()
+
+        # POLISH: soft R2.0 round on the lid's outer show face (top, Z=2.5) to
+        # match the body front -- smoother pebble, top and bottom symmetric.
+        top = lid_part.faces().sort_by(Axis.Z)[-1]
+        fillet(top.edges(), radius=2.0)
+
+        # ENGRAVING: owner name debossed into the lid back face. 0.5mm deep so
+        # it prints cleanly without bridging. Casing/text is just a string.
+        with BuildSketch(Plane.XY.offset(2.5)):
+            Text(ENGRAVING, font_size=7.0)
+        extrude(amount=-0.5, mode=Mode.SUBTRACT)
 
     return lid_part.part
 
